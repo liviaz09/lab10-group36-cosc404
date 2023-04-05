@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import recovery.LogRecord.LogRecordType;
@@ -55,21 +56,34 @@ public class Recovery {
 		// TODO: Implement loop to scan through log records for Pass #1
 		// TODO: For a checkpoint start, all active transactions are in transaction field of log record in a comma-separated form    	
 		// TODO: For a checkpoint end, the value saved to database for each item is given.  These key-value pairs are comma-separated in transaction field in record.
-    	
-		// for ( )
+		
+		for (int i = records.size()-1; i >= 0; i--) 
 		{
-			//		case CHECKPOINT_START:
-						// TODO: Add all transactions not currently in REDO LIST to UNDO LIST
-							
-						
-			// 		case CHECKPOINT_END:    			 
-						// TODO: Put all data values into database.  Comma-separate key value pairs
+			LogRecord record = records.get(i);
+
+			String transactions = record.getTransaction(); //all active transactions	
+			switch(record.getType())
+			{
+				
+				case CHECKPOINT_START:
+					// TODO: Add all transactions not currently in REDO LIST to UNDO LIST
+					if(!redoList.contains(transactions))
+						undoList.add(transactions);
+					break;
+
+				case CHECKPOINT_END:    			 
+					// TODO: Put all data values into database.  Comma-separate key value pairs
+
+					//db.put(?, ?);
+					break;
+
+			}
 												 
 		}
 		
 		// TODO: Record start and end of pass #1 in db    	
-		// db.setEndPass(1, ?TODO:?);
-		// db.setStartPass(1, ?TODO:?);
+		db.setEndPass(1, 0);
+		db.setStartPass(1, records.size()-1);
 		
 		// TODO: Perform REDO pass #2
 		// Pass #2: REDO from start of log (or CHECKPOINT START with matching CHECKPOINT END) until have redone all operations for transactions in redo list
