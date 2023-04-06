@@ -62,22 +62,28 @@ public class Recovery {
 			LogRecord record = records.get(i);
 
 			String transactions = record.getTransaction(); //all active transactions	
-			switch(record.getType())
-			{
+			//System.out.println(record.getType());
+			if (record.getType() == LogRecordType.COMMIT){
+				// TODO: Add all transactions not currently in REDO LIST to UNDO LIST
 				
-				case CHECKPOINT_START:
-					// TODO: Add all transactions not currently in REDO LIST to UNDO LIST
-					if(!redoList.contains(transactions))
-						undoList.add(transactions);
-					break;
+				//System.out.println(record.getUpdatedValue());
+				redoList.add(transactions);
+				System.out.println("redo: " + redoList);
+				
+			}
 
-				case CHECKPOINT_END:    			 
-					// TODO: Put all data values into database.  Comma-separate key value pairs
-
-					//db.put(?, ?);
-					break;
+		    else if (record.getType() == LogRecordType.START){		 
+				// TODO: Put all data values into database.  Comma-separate key value pairs
+				
+				//db.put(?, ?); key value pairs
 
 			}
+
+			else{
+				undoList.add(transactions);
+				System.out.println("undo: "+ undoList);
+			}
+
 												 
 		}
 		
