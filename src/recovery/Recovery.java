@@ -105,17 +105,21 @@ public class Recovery {
 			db.setEndPass(1, endPassOne);
 			db.setStartPass(1, records.size()-1);
 			
-		// TODO: Perform REDO pass #2
-		// Pass #2: REDO from start of log (or CHECKPOINT START with matching CHECKPOINT END) until have redone all operations for transactions in redo list
-			db.setStartPass(2, endPassOne);
-			int endPassTwo =endPassOne;
-		// TODO: Record start and end of pass #2
-			//check if redo list is empty
-			if(redoList.isEmpty()){
-				db.setEndPass(2, db.getStartPass(2));
-				return db;
+	// TODO: Perform REDO pass #2
+		db.setStartPass(2, endPassOne);
+		int endPassTwo =endPassOne;
+
+		for(int i =endPassOne; i<records.size();i++){
+			LogRecord rec = records.get(i);
+			if(redoList.contains(rec.getTransaction())){
+				if(rec.getItem()!=null){
+				db.put(rec.getItem(),rec.getUpdatedValue());
+				
+				}
 			}
-			
+
+		}
+
 		
 		// TODO: Perform UNDO Pass #3
 		// Pass #3: UNDO from end of log until have undone all operations for transactions in undo list
