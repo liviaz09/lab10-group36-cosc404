@@ -114,11 +114,12 @@ public class Recovery {
 			if(redoList.contains(rec.getTransaction())){
 				if(rec.getItem()!=null){
 				db.put(rec.getItem(),rec.getUpdatedValue());
-				
+				endPassTwo = i;
 				}
 			}
 
 		}
+		db.setEndPass(2, endPassTwo);
 
 		
 		// TODO: Perform UNDO Pass #3
