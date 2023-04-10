@@ -95,6 +95,9 @@ public class Recovery {
 
 					}
 				}
+				else if(record.getType()==LogRecordType.ABORT){
+					undoList.add(record.getTransaction());
+				}
 				else{
 					if(!redoList.contains(record.getTransaction())){
 					undoList.add(record.getTransaction());{
@@ -114,8 +117,9 @@ public class Recovery {
 			if(redoList.contains(rec.getTransaction())){
 				if(rec.getItem()!=null){
 				db.put(rec.getItem(),rec.getUpdatedValue());
-				endPassTwo = i;
+				
 				}
+				endPassTwo = i;
 			}
 
 		}
@@ -123,20 +127,21 @@ public class Recovery {
 
 		
 		// TODO: Perform UNDO Pass #3
-		// Pass #3: UNDO from end of log until have undone all operations for transactions in undo list
-		db.setStartPass(3, endPassTwo);		
+		db.setStartPass(3, records.size()-1);		
+		int endPassThree = records.size()-1;
 		// TODO: Record start and end of pass #3
-		for(int i= endPassTwo;i>= records.size();i--){
+		for(int i= records.size()-1;i>=0;i--){
 			LogRecord rec = records.get(i);
 			if(undoList.contains(rec.getTransaction())){
-				if(rec.getType()==LogRecordType.UPDATE){
+				endPassThree=i;
+				if(rec.getItem()!=null){
 					db.put(rec.getItem(),rec.getInitialValue());
 				}
 			}
 		}
-		db.setEndPass(endPassTwo, records.size()-1);
+		db.setEndPass(3, endPassThree);
 		return db;
-	}
+		}
 
 	/**
 	 * Reads a log file where each record is comma-separated and on its own line.
