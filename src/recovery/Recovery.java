@@ -56,46 +56,66 @@ public class Recovery {
 		// TODO: Implement loop to scan through log records for Pass #1
 		// TODO: For a checkpoint start, all active transactions are in transaction field of log record in a comma-separated form    	
 		// TODO: For a checkpoint end, the value saved to database for each item is given.  These key-value pairs are comma-separated in transaction field in record.
-		
-		for (int i = records.size()-1; i >= 0; i--) 
-		{
-			LogRecord record = records.get(i);
+		// set end position:
+			int endPassOne = 0;
+			boolean checkEnd = false;
+			pass1 : for (int i = records.size()-1; i >= 0; i--) 
+			{
+				LogRecord record = records.get(i);
 
-			String transactions = record.getTransaction(); //all active transactions	
-			//System.out.println(record.getType());
-			if (record.getType() == LogRecordType.COMMIT){
-				// TODO: Add all transactions not currently in REDO LIST to UNDO LIST
+				String transactions = record.getTransaction(); //all active transactions	
+				//System.out.println(record.getType());
 				
-				//System.out.println(record.getUpdatedValue());
-				redoList.add(transactions);
-				System.out.println("redo: " + redoList);
-				
-			}
+					// TODO: Add all transactions not currently in REDO LIST to UNDO LIST
+				if(record.getType() == LogRecordType.COMMIT){
+					if(!redoList.contains(record.getTransaction())){
+							redoList.add(record.getTransaction());
+					}
+						// we add updated value to the databse
+				}
+					//System.out.println(record.getUpdatedValue());
+				else if(record.getType() == LogRecordType.CHECKPOINT_START){
+					
+					if(!redoList.contains(record.getTransaction())){
+						undoList.add(record.getTransaction());
+					}
+					if(checkEnd){
+						endPassOne =i;
+						break pass1;
+					}
+				}
+				else if(record.getType()==LogRecordType.CHECKPOINT_END ){
+					checkEnd =true;
+					//add to database
+					String valueUpdate [] = record.getTransaction().split(",");
+					for(int j =0; j < valueUpdate.length;j+=2){
+						String  key = valueUpdate[j];
+						String letter = valueUpdate[j+1];
+						db.put(key,Integer.parseInt(letter));
 
-		    else if (record.getType() == LogRecordType.START){		 
-				// TODO: Put all data values into database.  Comma-separate key value pairs
-				
-				//db.put(?, ?); key value pairs
-
-			}
-
-			else{
-				undoList.add(transactions);
-				System.out.println("undo: "+ undoList);
-			}
-
-												 
-		}
-		
-		// TODO: Record start and end of pass #1 in db    	
-		db.setEndPass(1, 0);
-		db.setStartPass(1, records.size()-1);
-		
+					}
+				}
+				else{
+					if(!redoList.contains(record.getTransaction())){
+					undoList.add(record.getTransaction());{
+					}
+					}
+				}										 
+			}	
+			db.setEndPass(1, endPassOne);
+			db.setStartPass(1, records.size()-1);
+			
 		// TODO: Perform REDO pass #2
 		// Pass #2: REDO from start of log (or CHECKPOINT START with matching CHECKPOINT END) until have redone all operations for transactions in redo list
-		
+			db.setStartPass(2, endPassOne);
+			int endPassTwo =endPassOne;
 		// TODO: Record start and end of pass #2
-
+			//check if redo list is empty
+			if(redoList.isEmpty()){
+				db.setEndPass(2, db.getStartPass(2));
+				return db;
+			}
+			
 		
 		// TODO: Perform UNDO Pass #3
 		// Pass #3: UNDO from end of log until have undone all operations for transactions in undo list
