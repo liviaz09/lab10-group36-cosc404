@@ -124,10 +124,21 @@ public class Recovery {
 		
 		// TODO: Perform UNDO Pass #3
 		// Pass #3: UNDO from end of log until have undone all operations for transactions in undo list
-				
+		db.setStartPass(3, endPassTwo);		
 		// TODO: Record start and end of pass #3
-		
-		System.out.println(db);
+		for(int i= endPassTwo;i>= records.size();i--){
+			LogRecord rec = records.get(i);
+			if(undoList.contains(rec.getTransaction())){
+				if(rec.getType()==LogRecordType.UPDATE){
+					db.put(rec.getItem(),rec.getUpdatedValue());
+
+				}
+				else if(rec.getType()==LogRecordType.COMMIT){
+					undoList.remove(rec.getTransaction());
+				}
+			}
+		}
+		db.setEndPass(endPassTwo, records.size()-1);
 		return db;
 	}
 
