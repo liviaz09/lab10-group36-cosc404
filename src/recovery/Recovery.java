@@ -130,11 +130,7 @@ public class Recovery {
 			LogRecord rec = records.get(i);
 			if(undoList.contains(rec.getTransaction())){
 				if(rec.getType()==LogRecordType.UPDATE){
-					db.put(rec.getItem(),rec.getUpdatedValue());
-
-				}
-				else if(rec.getType()==LogRecordType.COMMIT){
-					undoList.remove(rec.getTransaction());
+					db.put(rec.getItem(),rec.getInitialValue());
 				}
 			}
 		}
